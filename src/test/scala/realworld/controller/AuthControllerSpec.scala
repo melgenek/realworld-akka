@@ -3,6 +3,7 @@ package realworld.controller
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import cats.Id
 import com.softwaremill.macwire._
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -12,6 +13,8 @@ import realworld.data.UserData
 import realworld.service.UserService
 import realworld.util.{SpecImplicits, TestData}
 import spray.json._
+
+import scala.concurrent.Future
 
 class AuthControllerSpec
   extends FlatSpec
@@ -48,7 +51,7 @@ class AuthControllerSpec
   private trait Wiring {
     val userData = UserData(Email, UserName, Token, None, None)
 
-    val userService: UserService = mock[UserService]
+    val userService: UserService[Future] = mock[UserService[Future]]
     when(userService.registerUser(any())).thenReturnAsync(userData)
 
     val controller: AuthController = wire[AuthController]

@@ -5,7 +5,9 @@ import realworld.data.{RegistrationData, UserJsonProtocol}
 import realworld.service.UserService
 import realworld.util.Controller
 
-class AuthController(userService: UserService) extends Controller with UserJsonProtocol {
+import scala.concurrent.Future
+
+class AuthController(userService: UserService[Future]) extends Controller with UserJsonProtocol {
 
   override def route: Route = pathPrefix("users") {
     pathEndOrSingleSlash {

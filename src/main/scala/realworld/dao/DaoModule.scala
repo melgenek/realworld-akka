@@ -1,10 +1,11 @@
 package realworld.dao
 
 import com.softwaremill.macwire._
-import realworld.config.ActorModule
+import realworld.config.{ActorModule, DbModule}
+import slick.dbio.DBIO
 
-trait DaoModule extends ActorModule {
+trait DaoModule extends DbModule with ActorModule {
 
-  lazy val userDao: UserDao = wire[InMemoryUserDao]
+  lazy val userDao: UserDao[DBIO] = wire[UserDaoImpl]
 
 }

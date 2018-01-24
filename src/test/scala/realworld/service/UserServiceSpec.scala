@@ -1,76 +1,66 @@
 package realworld.service
 
+import cats.Id
 import com.softwaremill.macwire._
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import realworld.dao.UserDao
 import realworld.data.{RegistrationData, UserData}
 import realworld.model.User
-import realworld.util.{SpecContext, SpecImplicits, TestData}
-
-import scala.concurrent.Future
+import realworld.util.{IdTransformation, TestData}
 
 class UserServiceSpec
   extends FlatSpec
     with Matchers
-    with MockitoSugar
-    with ScalaFutures
-    with SpecContext {
+    with MockitoSugar {
 
   import TestData._
 
   "registerUser" should "create user from registration form" in new Wiring {
-    val resultFuture: Future[UserData] = userService.registerUser(registrationData)
+    val result: UserData = userService.registerUser(registrationData)
 
-    whenReady(resultFuture) { _ =>
-      val userCaptor: ArgumentCaptor[User] = ArgumentCaptor.forClass(classOf[User])
-      verify(userDao).create(userCaptor.capture())
+    val userCaptor: ArgumentCaptor[User] = ArgumentCaptor.forClass(classOf[User])
+    verify(userDao).create(userCaptor.capture())
 
-      val user: User = userCaptor.getValue
-      user.email should equal(Email)
-      user.username should equal(UserName)
-      user.passwordHash should equal(PasswordHash)
-    }
+    val user: User = userCaptor.getValue
+    user.email should equal(Email)
+    user.username should equal(UserName)
+    user.passwordHash should equal(PasswordHash)
   }
 
   it should "return created user" in new Wiring {
-    val resultFuture: Future[UserData] = userService.registerUser(registrationData)
+    val result: UserData = userService.registerUser(registrationData)
 
-    whenReady(resultFuture) { userData =>
-      userData.username should equal(UserName)
-      userData.email should equal(Email)
-      userData.image should equal(Some(Image))
-      userData.bio should equal(Some(Bio))
-    }
+    result.username should equal(UserName)
+    result.email should equal(Email)
+    result.image should equal(Some(Image))
+    result.bio should equal(Some(Bio))
   }
 
   it should "generate token for user" in new Wiring {
     when(authService.createTokenByEmail(any())).thenReturn(Token)
 
-    val resultFuture: Future[UserData] = userService.registerUser(registrationData)
+    val result: UserData = userService.registerUser(registrationData)
 
-    whenReady(resultFuture) { userData =>
-      userData.token should equal(Token)
-    }
+    result.token should equal(Token)
   }
 
-  private trait Wiring extends SpecImplicits {
+  private trait Wiring extends IdTransformation {
     val registrationData = RegistrationData(UserName, Email, Password)
 
-    val userDao: UserDao = mock[UserDao]
+    val userDao: UserDao[Id] = mock[UserDao[Id]]
     val createdUser: User = User(Email, UserName, PasswordHash, Some(Bio), Some(Image))
-    when(userDao.create(any())).thenReturnAsync(createdUser)
+    when(userDao.create(any())).thenReturn(createdUser)
 
     val hashService: HashService = mock[HashService]
     when(hashService.hashPassword(Password)).thenReturn(PasswordHash)
 
     val authService: AuthService = mock[AuthService]
 
-    val userService: UserService = wire[UserServiceImpl]
+    val userService: UserService[Id] = wire[UserServiceImpl[Id, Id]]
   }
 
 }

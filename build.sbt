@@ -15,10 +15,14 @@ val dependencies = Seq(
 
   "com.typesafe.slick" %% "slick" % versions.slick,
   "com.typesafe.slick" %% "slick-hikaricp" % versions.slick,
+  "com.h2database" % "h2" % "1.4.196",
+  "org.flywaydb" % "flyway-core" % "5.0.6",
 
   "org.mindrot" % "jbcrypt" % "0.4",
   "io.jsonwebtoken" % "jjwt" % "0.9.0",
+
   "io.scalaland" %% "chimney" % "0.1.6",
+  "org.typelevel" %% "cats-core" % "1.0.1",
 
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",

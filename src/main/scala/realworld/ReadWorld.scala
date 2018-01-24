@@ -9,7 +9,7 @@ object ReadWorld extends Dependencies with StrictLogging {
 
   def main(args: Array[String]): Unit = {
     Http().bindAndHandle(routes, httpInterface, httpPort).fast
-      .map(binding => logger.info(s"Challenge service HTTP server started on ${binding.localAddress}"))
+      .map(binding => logger.info(s"RealWorld server started on ${binding.localAddress}"))
   }
 
   lazy val httpInterface: String = config.getString("http.interface")

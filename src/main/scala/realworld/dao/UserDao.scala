@@ -1,31 +1,28 @@
 package realworld.dao
 
-import realworld.model.User
+import realworld.model.{User, UserModel}
+import slick.dbio._
+import slick.jdbc.JdbcProfile
 
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.language.higherKinds
 
-trait UserDao {
+trait UserDao[F[_]] {
 
-  def create(user: User): Future[User]
+  def create(user: User): F[User]
 
-  def get(email: String): Future[User]
+  def get(email: String): F[User]
 
 }
 
-class InMemoryUserDao(implicit executionContext: ExecutionContext) extends UserDao {
+class UserDaoImpl(val profile: JdbcProfile)(implicit ec: ExecutionContext) extends UserDao[DBIO] with UserModel {
 
-  private val map: mutable.Map[String, User] = mutable.Map.empty
+  import profile.api._
 
-  override def create(user: User): Future[User] = {
-    map += user.email -> user
-    Future {
-      user
-    }
-  }
+  override def create(user: User): DBIO[User] =
+    (users += user).map(_ => user)
 
-  override def get(email: String): Future[User] = Future {
-    map(email)
-  }
+  override def get(email: String): DBIO[User] =
+    users.filter(_.email === email).result.head
 
 }
