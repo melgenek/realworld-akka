@@ -1,7 +1,5 @@
 package realworld.util
 
-import realworld.data.RegistrationData
-
 object TestData {
 
   val UserName = "username"
@@ -11,6 +9,5 @@ object TestData {
   val Token = "token"
   val Bio = "bio"
   val Image = "image"
-
 
 }

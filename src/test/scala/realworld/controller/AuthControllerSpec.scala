@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.macwire._
-import org.mockito.ArgumentMatchers.any
+import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
@@ -36,7 +36,7 @@ class AuthControllerSpec
 
     Post("/users", registrationData) ~> controller.route ~> check {
       status shouldEqual StatusCodes.OK
-      val user = responseAs[JsObject].fields("user").asJsObject.fields
+      val user: Map[String, JsValue] = responseAs[JsObject].fields("user").asJsObject.fields
       user("email") should equal(JsString(Email))
       user("token") should equal(JsString(Token))
       user("username") should equal(JsString(UserName))

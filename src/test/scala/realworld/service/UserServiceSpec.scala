@@ -2,7 +2,7 @@ package realworld.service
 
 import com.softwaremill.macwire._
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
+import org.mockito.Matchers.any
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
@@ -30,7 +30,7 @@ class UserServiceSpec
       val userCaptor: ArgumentCaptor[User] = ArgumentCaptor.forClass(classOf[User])
       verify(userDao).create(userCaptor.capture())
 
-      val user = userCaptor.getValue
+      val user: User = userCaptor.getValue
       user.email should equal(Email)
       user.username should equal(UserName)
       user.passwordHash should equal(PasswordHash)

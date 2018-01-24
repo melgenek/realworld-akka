@@ -1,12 +1,12 @@
 package realworld.service
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{FlatSpec, Matchers}
 
 class AuthServiceSpec extends FlatSpec with Matchers {
 
   "createTokenByEmail" should "hash and check passwords" in {
-    val config = ConfigFactory.load()
+    val config: Config = ConfigFactory.load()
     val service = new AuthServiceImpl(config)
     val email = "email"
 

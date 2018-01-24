@@ -9,7 +9,7 @@
     </appender>
 
     <logger name="slick" level="WARN"/>
-    <logger name="ru.tcsbank.api.challenge" level="DEBUG"/>
+    <logger name="realworld" level="DEBUG"/>
 
     <root level="TRACE">
         <appender-ref ref="STDOUT"/>

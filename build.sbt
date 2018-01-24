@@ -5,14 +5,6 @@ scalaVersion := "2.12.4"
 val versions = new {
   val akkaHttp = "10.0.10"
   val slick = "3.2.1"
-  val macwire = "2.3.0"
-  val scalatest = "3.0.4"
-  val jbcrypt = "0.4"
-  val jjwt = "0.9.0"
-  val mockito = "2.12.0"
-  val chimney = "0.1.6"
-  val scalaLogging = "3.7.2"
-  val logback = "1.2.3"
 }
 
 libraryDependencies ++= dependencies ++ testDependencies
@@ -24,17 +16,17 @@ val dependencies = Seq(
   "com.typesafe.slick" %% "slick" % versions.slick,
   "com.typesafe.slick" %% "slick-hikaricp" % versions.slick,
 
-  "org.mindrot" % "jbcrypt" % versions.jbcrypt,
-  "io.jsonwebtoken" % "jjwt" % versions.jjwt,
-  "io.scalaland" %% "chimney" % versions.chimney,
+  "org.mindrot" % "jbcrypt" % "0.4",
+  "io.jsonwebtoken" % "jjwt" % "0.9.0",
+  "io.scalaland" %% "chimney" % "0.1.6",
 
-  "ch.qos.logback" % "logback-classic" % versions.logback,
-  "com.typesafe.scala-logging" %% "scala-logging" % versions.scalaLogging,
-  "com.softwaremill.macwire" %% "macros" % versions.macwire % Provided
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+  "com.softwaremill.macwire" %% "macros" % "2.3.0" % Provided
 )
 
 val testDependencies = Seq(
   "com.typesafe.akka" %% "akka-http-testkit" % versions.akkaHttp,
-  "org.mockito" % "mockito-core" % versions.mockito,
-  "org.scalatest" %% "scalatest" % versions.scalatest
+  "org.mockito" % "mockito-core" % "1.10.19",
+  "org.scalatest" %% "scalatest" % "3.0.4"
 ).map(_ % Test)
