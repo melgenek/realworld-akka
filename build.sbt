@@ -21,6 +21,7 @@ val dependencies = Seq(
   "org.mindrot" % "jbcrypt" % "0.4",
   "io.jsonwebtoken" % "jjwt" % "0.9.0",
 
+  "commons-validator" % "commons-validator" % "1.6",
   "io.scalaland" %% "chimney" % "0.1.6",
   "org.typelevel" %% "cats-core" % "1.0.1",
 

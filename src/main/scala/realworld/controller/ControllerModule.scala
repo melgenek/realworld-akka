@@ -2,12 +2,12 @@ package realworld.controller
 
 import akka.http.scaladsl.server.{Directives, Route}
 import com.softwaremill.macwire._
-import realworld.service.ServiceModule
+import realworld.facade.FacadeModule
 import realworld.util.Controller
 
-trait ControllerModule extends ServiceModule with Directives {
+trait ControllerModule extends FacadeModule with Directives {
 
-  lazy val authController: AuthController = wire[AuthController]
+  lazy val authController: UserController = wire[UserController]
 
   lazy val controllers: Set[Controller] = wireSet[Controller]
 

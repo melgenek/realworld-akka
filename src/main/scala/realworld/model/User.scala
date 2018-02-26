@@ -2,7 +2,7 @@ package realworld.model
 
 case class User(email: String,
                 username: String,
-                passwordHash: String,
+                password: String,
                 bio: Option[String] = None,
                 image: Option[String] = None)
 

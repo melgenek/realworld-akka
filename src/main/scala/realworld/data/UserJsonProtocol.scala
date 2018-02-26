@@ -1,20 +1,19 @@
 package realworld.data
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFormat, RootJsonReader, RootJsonWriter}
-import spray.json._
+import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonReader, RootJsonWriter, _}
 
 trait UserJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
 
-  implicit val registrationDataFormat: RootJsonReader[RegistrationData] = (json: JsValue) => {
+  implicit val registrationDataReader: RootJsonReader[RegistrationData] = (json: JsValue) => {
     val form = json.asJsObject.fields("user")
-    val username = fromField[String](form, "username")
-    val email = fromField[String](form, "email")
-    val password = fromField[String](form, "password")
-    RegistrationData(username, email, password)
+    val email: Option[String] = fromField[Option[String]](form, "email")
+    val username: Option[String] = fromField[Option[String]](form, "username")
+    val password: Option[String] = fromField[Option[String]](form, "password")
+    RegistrationData(email, username, password)
   }
 
-  implicit val userDataFormat: RootJsonWriter[UserData] = (data: UserData) =>
+  implicit val userDataWriter: RootJsonWriter[UserData] = (data: UserData) =>
     JsObject(
       "user" -> JsObject(
         "token" -> JsString(data.token),
@@ -24,13 +23,5 @@ trait UserJsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
         "image" -> data.image.toJson
       )
     )
-
-  //  override def read(json: JsValue): UserData = {
-  //    val form = json.asJsObject("user")
-  //    val username = fromField[String](form, "username")
-  //    val email = fromField[String](form, "email")
-  //    val password = fromField[String](form, "password")
-  //    UserData(username, email, password)
-  //  }
 
 }

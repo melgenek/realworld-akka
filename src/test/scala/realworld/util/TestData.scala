@@ -1,5 +1,7 @@
 package realworld.util
 
+import realworld.model.User
+
 object TestData {
 
   val UserName = "username"
@@ -9,5 +11,7 @@ object TestData {
   val Token = "token"
   val Bio = "bio"
   val Image = "image"
+
+  val user = User(Email, UserName, Password)
 
 }

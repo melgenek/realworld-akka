@@ -11,7 +11,9 @@ trait UserDao[F[_]] {
 
   def create(user: User): F[User]
 
-  def get(email: String): F[User]
+  def findByEmail(email: String): F[Option[User]]
+
+  def findByUsername(username: String): F[Option[User]]
 
 }
 
@@ -22,7 +24,10 @@ class UserDaoImpl(val profile: JdbcProfile)(implicit ec: ExecutionContext) exten
   override def create(user: User): DBIO[User] =
     (users += user).map(_ => user)
 
-  override def get(email: String): DBIO[User] =
-    users.filter(_.email === email).result.head
+  override def findByEmail(email: String): DBIO[Option[User]] =
+    users.filter(_.email === email.bind).result.headOption
+
+  override def findByUsername(username: String): DBIO[Option[User]] =
+    users.filter(_.username === username.bind).result.headOption
 
 }

@@ -1,11 +1,15 @@
 package realworld
 
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.util.FastFuture._
 import com.typesafe.scalalogging.StrictLogging
 import realworld.controller.ControllerModule
+import realworld.validation.ValidationExceptionHandler
 
 object ReadWorld extends Dependencies with StrictLogging {
+
+  implicit val exceptionHandler: ExceptionHandler = ValidationExceptionHandler.handler
 
   def main(args: Array[String]): Unit = {
     Http().bindAndHandle(routes, httpInterface, httpPort).fast

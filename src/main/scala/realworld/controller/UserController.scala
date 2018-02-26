@@ -2,12 +2,12 @@ package realworld.controller
 
 import akka.http.scaladsl.server.Route
 import realworld.data.{RegistrationData, UserJsonProtocol}
-import realworld.service.UserService
+import realworld.facade.UserFacade
 import realworld.util.Controller
 
 import scala.concurrent.Future
 
-class AuthController(userService: UserService[Future]) extends Controller with UserJsonProtocol {
+class UserController(userFacade: UserFacade[Future]) extends Controller with UserJsonProtocol {
 
   override def route: Route = pathPrefix("users") {
     pathEndOrSingleSlash {
@@ -17,7 +17,7 @@ class AuthController(userService: UserService[Future]) extends Controller with U
 
   private def register = {
     (post & entity(as[RegistrationData])) { registrationData =>
-      complete(userService.registerUser(registrationData))
+      complete(userFacade.registerUser(registrationData))
     }
   }
 
