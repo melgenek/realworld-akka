@@ -4,9 +4,9 @@ import com.typesafe.config.Config
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
 import realworld.exception.AuthException
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
-trait AuthService {
+trait TokenService {
 
   def createTokenByEmail(email: String): String
 
@@ -14,7 +14,7 @@ trait AuthService {
 
 }
 
-class AuthServiceImpl(config: Config) extends AuthService {
+class TokenServiceImpl(config: Config) extends TokenService {
 
   private val key: String = config.getString("jwt.secret")
   private val issuer: String = config.getString("jwt.issuer")
@@ -29,7 +29,7 @@ class AuthServiceImpl(config: Config) extends AuthService {
   def validateAndGetEmail(token: String): Either[AuthException, String] =
     Try(Jwts.parser().setSigningKey(key).requireIssuer(issuer).parseClaimsJws(token)) match {
       case Success(claims) => Right(claims.getBody.getSubject)
-      case Failure(e) => Left(AuthException(e))
+//      case Failure(e) => Left(AuthException(e))
     }
 
 }

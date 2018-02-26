@@ -10,8 +10,10 @@ trait UserModel extends SlickModel {
 
   import profile.api._
 
-  class Users(t: Tag) extends Table[User](t, "users") {
-    def email = column[String]("email", O.PrimaryKey)
+  class Users(t: Tag) extends Table[IdRecord[Long, User]](t, "users") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+
+    def email = column[String]("email", O.Unique)
 
     def username = column[String]("username", O.Unique)
 
@@ -21,7 +23,9 @@ trait UserModel extends SlickModel {
 
     def image = column[String]("image")
 
-    def * = (email, username, password, bio.?, image.?) <> (User.tupled, User.unapply)
+    def user = (email, username, password, bio.?, image.?) <> (User.tupled, User.unapply)
+
+    def * = (id, user).<>[IdRecord[Long, User]]((IdRecord[Long, User] _).tupled, IdRecord.unapply)
   }
 
   val users = TableQuery[Users]

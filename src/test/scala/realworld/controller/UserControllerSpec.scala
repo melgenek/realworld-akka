@@ -47,11 +47,32 @@ class UserControllerSpec
     }
   }
 
+  "login" should "return authenticated user" in new Wiring {
+    val loginData: JsValue =
+      s"""{
+         |  "user":{
+         |    "email": "$Email",
+         |    "password": "$Password"
+         |  }
+         |}""".stripMargin.parseJson
+
+    Post("/users/login", loginData) ~> controller.route ~> check {
+      status shouldEqual StatusCodes.OK
+      val user: Map[String, JsValue] = responseAs[JsObject].fields("user").asJsObject.fields
+      user("email") should equal(JsString(Email))
+      user("token") should equal(JsString(Token))
+      user("username") should equal(JsString(UserName))
+      user("bio") should equal(JsNull)
+      user("image") should equal(JsNull)
+    }
+  }
+
   private trait Wiring {
     val userData = UserData(Email, UserName, Token, None, None)
 
     val userFacade: UserFacade[Future] = mock[UserFacade[Future]]
-    when(userFacade.registerUser(any())).thenReturnAsync(userData)
+    when(userFacade.register(any())).thenReturnAsync(userData)
+    when(userFacade.login(any())).thenReturnAsync(userData)
 
     val controller: UserController = wire[UserController]
   }

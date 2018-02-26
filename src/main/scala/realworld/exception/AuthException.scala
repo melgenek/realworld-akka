@@ -1,3 +1,5 @@
 package realworld.exception
 
-case class AuthException(e: Throwable) extends RuntimeException(e)
+abstract class AuthException(val key: String, val message: String) extends ApiException
+
+object LoginPasswordAuthException extends AuthException("email or password", "is invalid")

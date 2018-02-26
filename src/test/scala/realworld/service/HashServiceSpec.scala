@@ -10,8 +10,8 @@ class HashServiceSpec extends FlatSpec with Matchers {
 
     val hash: String = service.hashPassword(password)
 
-    service.checkPassword(password, hash) should be(true)
-    service.checkPassword("another_password", hash) should be(false)
+    service.isPasswordCorrect(password, hash) should be(true)
+    service.isPasswordCorrect("another_password", hash) should be(false)
   }
 
 }

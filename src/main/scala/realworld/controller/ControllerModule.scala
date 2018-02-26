@@ -3,7 +3,7 @@ package realworld.controller
 import akka.http.scaladsl.server.{Directives, Route}
 import com.softwaremill.macwire._
 import realworld.facade.FacadeModule
-import realworld.util.Controller
+import realworld.util.akka.Controller
 
 trait ControllerModule extends FacadeModule with Directives {
 

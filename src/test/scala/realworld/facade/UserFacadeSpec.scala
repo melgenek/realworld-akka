@@ -7,13 +7,13 @@ import com.softwaremill.macwire._
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import realworld.data.{RegistrationData, UserData}
+import realworld.data.{LoginData, RegistrationData, UserData}
 import realworld.exception.PropertyException
 import realworld.model.User
-import realworld.service.{AuthService, UserService}
+import realworld.service.{TokenService, UserService}
 import realworld.util.{IdInstances, TestData}
 import realworld.validation.Validator
-import realworld.validation.entity.EmptyEmail
+import realworld.validation.entity.InvalidEmail
 
 class UserFacadeSpec
   extends FlatSpec
@@ -23,7 +23,7 @@ class UserFacadeSpec
   import TestData._
 
   "registerUser" should "generate token for valid user" in new Wiring {
-    val result: UserData = facade.registerUser(registrationData)
+    val result: UserData = facade.register(registrationData)
 
     result should equal(UserData(
       Email,
@@ -33,31 +33,39 @@ class UserFacadeSpec
   }
 
   it should "fail when registration data is invalid" in new Wiring {
-    when(registrationDataValidator.validate(registrationData)).thenReturn(Invalid(NonEmptyList.of(EmptyEmail)))
+    when(registrationDataValidator.validate(registrationData)).thenReturn(Invalid(NonEmptyList.of(InvalidEmail)))
 
     val e: PropertyException = intercept[PropertyException] {
-      facade.registerUser(registrationData)
+      facade.register(registrationData)
     }
 
-    e should equal(PropertyException(NonEmptyList.of(EmptyEmail)))
+    e should equal(PropertyException(NonEmptyList.of(InvalidEmail)))
   }
 
+  "login" should "delegate to service" in new Wiring {
+    val result: UserData = facade.login(LoginData(Email, Password))
+
+    result should equal(UserData(
+      Email,
+      UserName,
+      Token
+    ))
+  }
 
   private trait Wiring extends IdInstances {
-    val registrationData = RegistrationData(Some(Email), Some(UserName), Some(Password))
+    val registrationData = RegistrationData(Email, UserName, Password)
 
     val registrationDataValidator: Validator[RegistrationData, User, Id] = mock[Validator[RegistrationData, User, Id]]
     when(registrationDataValidator.validate(registrationData)).thenReturn(Valid(user))
 
     val userService: UserService[Id] = mock[UserService[Id]]
     when(userService.create(user)).thenReturn(user)
+    when(userService.login(Email, Password)).thenReturn(user)
 
-    val authService: AuthService = mock[AuthService]
+    val authService: TokenService = mock[TokenService]
     when(authService.createTokenByEmail(Email)).thenReturn(Token)
 
-
     val facade: UserFacade[Id] = wire[UserFacadeImpl[Id]]
-
   }
 
 

@@ -12,7 +12,7 @@ object PropertyValidation {
   type ValidationResult[A] = ValidatedNel[PropertyValidation, A]
 }
 
-trait EmptyPropertyValidation extends PropertyValidation {
+case class EmptyProperty(property: String) extends PropertyValidation {
   override def message: String = "can't be blank"
 }
 

@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 trait ServiceModule extends DaoModule with ActorModule with FutureInstances with DBIOInstances {
 
-  lazy val authService: AuthService = wire[AuthServiceImpl]
+  lazy val authService: TokenService = wire[TokenServiceImpl]
 
   lazy val hashService: HashService = wire[BCryptHashService]
 

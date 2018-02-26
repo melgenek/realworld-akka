@@ -1,4 +1,4 @@
-package realworld.util
+package realworld.util.akka
 
 import akka.http.scaladsl.server.{Directives, Route}
 

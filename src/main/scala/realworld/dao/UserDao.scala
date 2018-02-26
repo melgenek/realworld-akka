@@ -1,6 +1,7 @@
 package realworld.dao
 
-import realworld.model.{User, UserModel}
+import realworld.model.IdRecord.IdUser
+import realworld.model.{IdRecord, User, UserModel}
 import slick.dbio._
 import slick.jdbc.JdbcProfile
 
@@ -9,11 +10,11 @@ import scala.language.higherKinds
 
 trait UserDao[F[_]] {
 
-  def create(user: User): F[User]
+  def create(user: User): F[IdUser]
 
-  def findByEmail(email: String): F[Option[User]]
+  def findByEmail(email: String): F[Option[IdUser]]
 
-  def findByUsername(username: String): F[Option[User]]
+  def findByUsername(username: String): F[Option[IdUser]]
 
 }
 
@@ -21,13 +22,13 @@ class UserDaoImpl(val profile: JdbcProfile)(implicit ec: ExecutionContext) exten
 
   import profile.api._
 
-  override def create(user: User): DBIO[User] =
-    (users += user).map(_ => user)
+  override def create(user: User): DBIO[IdUser] =
+    users returning users.map(_.id) into ((record, id) => record.copy(id = id)) += IdRecord(0, user)
 
-  override def findByEmail(email: String): DBIO[Option[User]] =
+  override def findByEmail(email: String): DBIO[Option[IdUser]] =
     users.filter(_.email === email.bind).result.headOption
 
-  override def findByUsername(username: String): DBIO[Option[User]] =
+  override def findByUsername(username: String): DBIO[Option[IdUser]] =
     users.filter(_.username === username.bind).result.headOption
 
 }

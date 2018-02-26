@@ -1,4 +1,4 @@
-package realworld.validation
+package realworld.exception.handler
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, ExceptionHandler}
