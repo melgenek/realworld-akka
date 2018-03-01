@@ -8,6 +8,7 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
+import realworld.auth.EmailAuthenticator
 import realworld.data.UserData
 import realworld.facade.UserFacade
 import realworld.util.{SpecImplicits, TestData}
@@ -73,6 +74,8 @@ class UserControllerSpec
     val userFacade: UserFacade[Future] = mock[UserFacade[Future]]
     when(userFacade.register(any())).thenReturnAsync(userData)
     when(userFacade.login(any())).thenReturnAsync(userData)
+
+    val emailAuthenticator: EmailAuthenticator = mock[EmailAuthenticator]
 
     val controller: UserController = wire[UserController]
   }

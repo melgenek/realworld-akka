@@ -3,6 +3,8 @@ package realworld.service
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.util.Success
+
 class TokenServiceSpec extends FlatSpec with Matchers {
 
   "createTokenByEmail" should "hash and check passwords" in {
@@ -12,7 +14,7 @@ class TokenServiceSpec extends FlatSpec with Matchers {
 
     val token: String = service.createTokenByEmail(email)
 
-    service.validateAndGetEmail(token) should equal(Right(email))
+    service.validateAndGetEmail(token) should equal(Success(email))
   }
 
 }

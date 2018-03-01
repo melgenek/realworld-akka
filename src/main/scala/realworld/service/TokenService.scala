@@ -2,15 +2,14 @@ package realworld.service
 
 import com.typesafe.config.Config
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
-import realworld.exception.AuthException
 
-import scala.util.{Success, Try}
+import scala.util.Try
 
 trait TokenService {
 
   def createTokenByEmail(email: String): String
 
-  def validateAndGetEmail(token: String): Either[AuthException, String]
+  def validateAndGetEmail(token: String): Try[String]
 
 }
 
@@ -26,10 +25,8 @@ class TokenServiceImpl(config: Config) extends TokenService {
       .signWith(SignatureAlgorithm.HS512, key)
       .compact()
 
-  def validateAndGetEmail(token: String): Either[AuthException, String] =
-    Try(Jwts.parser().setSigningKey(key).requireIssuer(issuer).parseClaimsJws(token)) match {
-      case Success(claims) => Right(claims.getBody.getSubject)
-//      case Failure(e) => Left(AuthException(e))
-    }
+  def validateAndGetEmail(token: String): Try[String] =
+    Try(Jwts.parser().setSigningKey(key).requireIssuer(issuer).parseClaimsJws(token))
+      .map(jwt => jwt.getBody.getSubject)
 
 }

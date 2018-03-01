@@ -1,13 +1,15 @@
 package realworld.controller
 
 import akka.http.scaladsl.server.Route
+import realworld.auth.{AuthDirectives, EmailAuthenticator}
 import realworld.data.{LoginData, RegistrationData, UserJsonProtocol}
 import realworld.facade.UserFacade
 import realworld.util.akka.Controller
 
 import scala.concurrent.Future
 
-class UserController(userFacade: UserFacade[Future]) extends Controller with UserJsonProtocol {
+class UserController(userFacade: UserFacade[Future],
+                     val emailAuthenticator: EmailAuthenticator) extends Controller with AuthDirectives with UserJsonProtocol {
 
   override def route: Route = pathPrefix("users") {
     pathEndOrSingleSlash {
@@ -15,6 +17,8 @@ class UserController(userFacade: UserFacade[Future]) extends Controller with Use
     } ~ path("login") {
       login
     }
+  } ~ path("user") {
+    info
   }
 
   protected def register: Route = {
@@ -28,5 +32,12 @@ class UserController(userFacade: UserFacade[Future]) extends Controller with Use
       complete(userFacade.login(loginData))
     }
   }
+
+  protected def info: Route =
+    get {
+      authenticate { email =>
+        complete(userFacade.getByEmail(email))
+      }
+    }
 
 }
