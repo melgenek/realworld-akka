@@ -7,7 +7,7 @@ import realworld.validation.ValidationModule
 
 import scala.concurrent.Future
 
-class FacadeModule extends ServiceModule with ValidationModule with FutureInstances {
+trait FacadeModule extends ServiceModule with ValidationModule with FutureInstances {
 
   val userFacade: UserFacade[Future] = wire[UserFacadeImpl[Future]]
 

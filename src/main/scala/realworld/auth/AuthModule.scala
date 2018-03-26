@@ -7,4 +7,6 @@ trait AuthModule extends ServiceModule {
 
   lazy val emailAuthenticator: EmailAuthenticator = wire[EmailAuthenticator]
 
+  lazy val authDirectives: AuthDirectives = wire[AuthDirectives]
+
 }

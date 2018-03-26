@@ -8,13 +8,11 @@ import akka.http.scaladsl.util.FastFuture._
 
 import scala.concurrent.Future
 
-trait AuthDirectives extends SecurityDirectives {
+class AuthDirectives(emailAuthenticator: EmailAuthenticator) extends SecurityDirectives {
 
-  def emailAuthenticator: EmailAuthenticator
+  def authenticate: Directive1[String] = authenticateEmail("realworld")
 
-  protected def authenticate: Directive1[String] = authenticateEmail("realworld")
-
-  protected def authenticateEmail(realm: String): AuthenticationDirective[String] =
+  private def authenticateEmail(realm: String): AuthenticationDirective[String] =
     extractExecutionContext.flatMap { implicit ec =>
       authenticateOrRejectWithChallenge[String] { cred =>
         emailAuthenticator.andThen(Future.successful)(cred).fast.map {

@@ -8,7 +8,7 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import realworld.data.{LoginData, RegistrationData, UserData}
-import realworld.exception.PropertyException
+import realworld.exception.{LoginPasswordAuthException, PropertyException}
 import realworld.model.User
 import realworld.service.{TokenService, UserService}
 import realworld.util.{IdInstances, TestData}
@@ -23,33 +23,31 @@ class UserFacadeSpec
   import TestData._
 
   "registerUser" should "generate token for valid user" in new Wiring {
-    val result: UserData = facade.register(registrationData)
+    val result: Either[PropertyException, UserData] = facade.register(registrationData)
 
-    result should equal(UserData(
+    result should equal(Right(UserData(
       Email,
       UserName,
       Token
-    ))
+    )))
   }
 
   it should "fail when registration data is invalid" in new Wiring {
     when(registrationDataValidator.validate(registrationData)).thenReturn(Invalid(NonEmptyList.of(InvalidEmail)))
 
-    val e: PropertyException = intercept[PropertyException] {
-      facade.register(registrationData)
-    }
+    val result: Either[PropertyException, UserData] = facade.register(registrationData)
 
-    e should equal(PropertyException(NonEmptyList.of(InvalidEmail)))
+    result should equal(Left(PropertyException(NonEmptyList.of(InvalidEmail))))
   }
 
   "login" should "delegate to service" in new Wiring {
-    val result: UserData = facade.login(LoginData(Email, Password))
+    val result: Either[LoginPasswordAuthException, UserData] = facade.login(LoginData(Email, Password))
 
-    result should equal(UserData(
+    result should equal(Right(UserData(
       Email,
       UserName,
       Token
-    ))
+    )))
   }
 
   private trait Wiring extends IdInstances {
@@ -60,7 +58,7 @@ class UserFacadeSpec
 
     val userService: UserService[Id] = mock[UserService[Id]]
     when(userService.create(user)).thenReturn(user)
-    when(userService.login(Email, Password)).thenReturn(user)
+    when(userService.login(Email, Password)).thenReturn(Right(user))
 
     val authService: TokenService = mock[TokenService]
     when(authService.createTokenByEmail(Email)).thenReturn(Token)

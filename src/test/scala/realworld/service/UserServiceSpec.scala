@@ -8,7 +8,7 @@ import org.mockito.Mockito.{verify, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import realworld.dao.UserDao
-import realworld.exception.{AuthException, LoginPasswordAuthException}
+import realworld.exception.LoginPasswordAuthException
 import realworld.model.{IdRecord, User}
 import realworld.util.{IdInstances, TestData}
 
@@ -36,29 +36,25 @@ class UserServiceSpec
   }
 
   "login" should "return user when password is correct" in new Wiring {
-    val result: User = service.login(Email, Password)
+    val result: Either[LoginPasswordAuthException, User] = service.login(Email, Password)
 
-    result should equal(createdUser)
+    result should equal(Right(createdUser))
   }
 
   it should "fail when password is not correct" in new Wiring {
     when(hashService.isPasswordCorrect(Password, PasswordHash)).thenReturn(false)
 
-    val e: AuthException = intercept[AuthException] {
-      service.login(Email, Password)
-    }
+    val result: Either[LoginPasswordAuthException, User] = service.login(Email, Password)
 
-    e should be(LoginPasswordAuthException)
+    result should be(Left(LoginPasswordAuthException()))
   }
 
   it should "fail when no user is found" in new Wiring {
     when(userDao.findByEmail(any())).thenReturn(None)
 
-    val e: AuthException = intercept[AuthException] {
-      service.login(Email, Password)
-    }
+    val result: Either[LoginPasswordAuthException, User] = service.login(Email, Password)
 
-    e should be(LoginPasswordAuthException)
+    result should be(Left(LoginPasswordAuthException()))
   }
 
   private trait Wiring extends IdInstances {

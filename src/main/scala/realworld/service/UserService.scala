@@ -13,7 +13,7 @@ trait UserService[F[_]] {
 
   def create(user: User): F[User]
 
-  def login(email: String, password: String): F[User]
+  def login(email: String, password: String): F[Either[LoginPasswordAuthException, User]]
 
   def findByEmail(email: String): F[Option[User]]
 
@@ -33,12 +33,13 @@ class UserServiceImpl[F[_], DB[_] : Monad](userDao: UserDao[DB],
     }
   }
 
-  override def login(email: String, password: String): F[User] =
+  override def login(email: String, password: String): F[Either[LoginPasswordAuthException, User]] =
     db(userDao.findByEmail(email)).flatMap { userOpt =>
-      userOpt.map { user =>
-        if (hashService.isPasswordCorrect(password, user.record.password)) ExceptionME[F].pure(user.record)
-        else ExceptionME[F].raiseError[User](LoginPasswordAuthException)
-      }.getOrElse(ExceptionME[F].raiseError(LoginPasswordAuthException))
+      val res: Either[LoginPasswordAuthException, User] = userOpt.map { user =>
+        if (hashService.isPasswordCorrect(password, user.record.password)) user.record.asRight[LoginPasswordAuthException]
+        else LoginPasswordAuthException().asLeft[User]
+      }.getOrElse(LoginPasswordAuthException().asLeft[User])
+      ExceptionME[F].pure(res)
     }
 
   override def findByEmail(email: String): F[Option[User]] =

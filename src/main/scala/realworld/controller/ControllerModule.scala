@@ -8,7 +8,7 @@ import realworld.util.akka.Controller
 
 trait ControllerModule extends FacadeModule with AuthModule with Directives {
 
-  lazy val authController: UserController = wire[UserController]
+  lazy val userController: UserController = wire[UserController]
 
   lazy val controllers: Set[Controller] = wireSet[Controller]
 
