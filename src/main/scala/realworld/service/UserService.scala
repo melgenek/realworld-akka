@@ -3,9 +3,8 @@ package realworld.service
 import cats._
 import cats.implicits._
 import realworld.dao.UserDao
-import realworld.exception.LoginPasswordAuthException
+import realworld.exception.LoginPasswordAuthError
 import realworld.model.User
-import realworld.util.ExceptionME
 
 import scala.language.higherKinds
 
@@ -13,7 +12,7 @@ trait UserService[F[_]] {
 
   def create(user: User): F[User]
 
-  def login(email: String, password: String): F[Either[LoginPasswordAuthException, User]]
+  def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]]
 
   def findByEmail(email: String): F[Option[User]]
 
@@ -21,10 +20,9 @@ trait UserService[F[_]] {
 
 }
 
-class UserServiceImpl[F[_], DB[_] : Monad](userDao: UserDao[DB],
-                                           hashService: HashService,
-                                           db: DB ~> F)
-                                          (implicit fMonadError: MonadError[F, Throwable]) extends UserService[F] {
+class UserServiceImpl[F[_] : Monad, DB[_] : Monad](userDao: UserDao[DB],
+                                                   hashService: HashService,
+                                                   db: DB ~> F) extends UserService[F] {
 
   override def create(user: User): F[User] = {
     val userWithHashedPassword: User = user.copy(password = hashService.hashPassword(user.password))
@@ -33,13 +31,13 @@ class UserServiceImpl[F[_], DB[_] : Monad](userDao: UserDao[DB],
     }
   }
 
-  override def login(email: String, password: String): F[Either[LoginPasswordAuthException, User]] =
+  override def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]] =
     db(userDao.findByEmail(email)).flatMap { userOpt =>
-      val res: Either[LoginPasswordAuthException, User] = userOpt.map { user =>
-        if (hashService.isPasswordCorrect(password, user.record.password)) user.record.asRight[LoginPasswordAuthException]
-        else LoginPasswordAuthException().asLeft[User]
-      }.getOrElse(LoginPasswordAuthException().asLeft[User])
-      ExceptionME[F].pure(res)
+      val res: Either[LoginPasswordAuthError, User] = userOpt.map { user =>
+        if (hashService.isPasswordCorrect(password, user.record.password)) user.record.asRight[LoginPasswordAuthError]
+        else LoginPasswordAuthError().asLeft[User]
+      }.getOrElse(LoginPasswordAuthError().asLeft[User])
+      Monad[F].pure(res)
     }
 
   override def findByEmail(email: String): F[Option[User]] =

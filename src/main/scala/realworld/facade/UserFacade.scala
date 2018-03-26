@@ -1,38 +1,36 @@
 package realworld.facade
 
-import cats.MonadError
+import cats.Monad
 import cats.implicits._
 import io.scalaland.chimney.dsl._
 import realworld.data.{LoginData, RegistrationData, UserData}
-import realworld.exception.{LoginPasswordAuthException, PropertyException, TokenException}
+import realworld.exception.{LoginPasswordAuthError, PropertyError, TokenError}
 import realworld.model.User
 import realworld.service.{TokenService, UserService}
-import realworld.util.ExceptionME
 import realworld.validation.Validator
 
 import scala.language.higherKinds
 
 trait UserFacade[F[_]] {
 
-  def register(registrationData: RegistrationData): F[Either[PropertyException, UserData]]
+  def register(registrationData: RegistrationData): F[Either[PropertyError, UserData]]
 
-  def login(loginData: LoginData): F[Either[LoginPasswordAuthException, UserData]]
+  def login(loginData: LoginData): F[Either[LoginPasswordAuthError, UserData]]
 
-  def getByEmail(email: String): F[Either[TokenException, UserData]]
+  def getByEmail(email: String): F[Either[TokenError, UserData]]
 
 }
 
-class UserFacadeImpl[F[_]](userService: UserService[F],
-                           tokenService: TokenService,
-                           registrationDataValidator: Validator[RegistrationData, User, F])
-                          (implicit monadError: MonadError[F, Throwable]) extends UserFacade[F] {
+class UserFacadeImpl[F[_] : Monad](userService: UserService[F],
+                                   tokenService: TokenService,
+                                   registrationDataValidator: Validator[RegistrationData, User, F]) extends UserFacade[F] {
 
-  def register(registrationData: RegistrationData): F[Either[PropertyException, UserData]] =
+  def register(registrationData: RegistrationData): F[Either[PropertyError, UserData]] =
     for {
       userValidation <- registrationDataValidator.validate(registrationData)
       registeredUser <- userValidation
-        .map(validUser => register(validUser).map(_.asRight[PropertyException]))
-        .valueOr(e => ExceptionME[F].pure(PropertyException(e).asLeft[UserData]))
+        .map(validUser => register(validUser).map(_.asRight[PropertyError]))
+        .valueOr(e => Monad[F].pure(PropertyError(e).asLeft[UserData]))
     } yield registeredUser
 
   private def register(user: User) =
@@ -40,17 +38,17 @@ class UserFacadeImpl[F[_]](userService: UserService[F],
       registeredUser <- userService.create(user)
     } yield convertToUserData(registeredUser)
 
-  override def login(loginData: LoginData): F[Either[LoginPasswordAuthException, UserData]] =
+  override def login(loginData: LoginData): F[Either[LoginPasswordAuthError, UserData]] =
     for {
       user <- userService.login(loginData.email, loginData.password)
     } yield user.map(convertToUserData)
 
-  override def getByEmail(email: String): F[Either[TokenException, UserData]] =
+  override def getByEmail(email: String): F[Either[TokenError, UserData]] =
     for {
       userOpt <- userService.findByEmail(email)
       userData <- userOpt
-        .map(user => ExceptionME[F].pure(convertToUserData(user).asRight[TokenException]))
-        .getOrElse(ExceptionME[F].pure(TokenException().asLeft[UserData]))
+        .map(user => Monad[F].pure(convertToUserData(user).asRight[TokenError]))
+        .getOrElse(Monad[F].pure(TokenError().asLeft[UserData]))
     } yield userData
 
   private def convertToUserData(user: User): UserData = user.into[UserData]

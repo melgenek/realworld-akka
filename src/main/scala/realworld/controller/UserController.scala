@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import realworld.auth.AuthDirectives
 import realworld.data.{LoginData, RegistrationData, UserJsonProtocol}
-import realworld.exception.{ExceptionProtocol, PropertyException}
+import realworld.exception.{ExceptionProtocol, PropertyError}
 import realworld.facade.UserFacade
 import realworld.parse.{ParseDirectives, Parsers}
 import realworld.util.akka.Controller
@@ -33,7 +33,7 @@ class UserController(userFacade: UserFacade[Future],
     (post & parse[RegistrationData]) { registrationData =>
       onSuccess(userFacade.register(registrationData)) {
         case Right(userData) => complete(userData)
-        case Left(PropertyException(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
+        case Left(PropertyError(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
       }
     }
   }

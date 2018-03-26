@@ -8,7 +8,7 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 import realworld.data.{LoginData, RegistrationData, UserData}
-import realworld.exception.{LoginPasswordAuthException, PropertyException}
+import realworld.exception.{LoginPasswordAuthError, PropertyError}
 import realworld.model.User
 import realworld.service.{TokenService, UserService}
 import realworld.util.{IdInstances, TestData}
@@ -23,7 +23,7 @@ class UserFacadeSpec
   import TestData._
 
   "registerUser" should "generate token for valid user" in new Wiring {
-    val result: Either[PropertyException, UserData] = facade.register(registrationData)
+    val result: Either[PropertyError, UserData] = facade.register(registrationData)
 
     result should equal(Right(UserData(
       Email,
@@ -35,13 +35,13 @@ class UserFacadeSpec
   it should "fail when registration data is invalid" in new Wiring {
     when(registrationDataValidator.validate(registrationData)).thenReturn(Invalid(NonEmptyList.of(InvalidEmail)))
 
-    val result: Either[PropertyException, UserData] = facade.register(registrationData)
+    val result: Either[PropertyError, UserData] = facade.register(registrationData)
 
-    result should equal(Left(PropertyException(NonEmptyList.of(InvalidEmail))))
+    result should equal(Left(PropertyError(NonEmptyList.of(InvalidEmail))))
   }
 
   "login" should "delegate to service" in new Wiring {
-    val result: Either[LoginPasswordAuthException, UserData] = facade.login(LoginData(Email, Password))
+    val result: Either[LoginPasswordAuthError, UserData] = facade.login(LoginData(Email, Password))
 
     result should equal(Right(UserData(
       Email,

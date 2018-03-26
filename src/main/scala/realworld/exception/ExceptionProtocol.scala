@@ -6,7 +6,7 @@ import spray.json.{JsObject, JsString, JsValue, RootJsonWriter}
 
 trait ExceptionProtocol extends ValidationProtocol with SprayJsonSupport {
 
-  implicit def authExceptionValidationWriter[T <: AuthException]: RootJsonWriter[T] = new RootJsonWriter[T] {
+  implicit def authExceptionValidationWriter[T <: AuthError]: RootJsonWriter[T] = new RootJsonWriter[T] {
     override def write(e: T): JsValue = JsObject(
       "errors" -> JsObject(
         e.key -> JsString(e.message)
