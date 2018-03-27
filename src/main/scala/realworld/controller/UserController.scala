@@ -3,7 +3,7 @@ package realworld.controller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import realworld.auth.AuthDirectives
-import realworld.data.{LoginData, RegistrationData, UserJsonProtocol}
+import realworld.data.{LoginData, RegistrationData, UserJsonProtocol, UserUpdateData}
 import realworld.exception.{ExceptionProtocol, PropertyError}
 import realworld.facade.UserFacade
 import realworld.parse.{ParseDirectives, Parsers}
@@ -26,7 +26,7 @@ class UserController(userFacade: UserFacade[Future],
       login
     }
   } ~ path("user") {
-    info
+    info ~ update
   }
 
   protected def register: Route = {
@@ -53,6 +53,16 @@ class UserController(userFacade: UserFacade[Future],
         onSuccess(userFacade.getByEmail(email)) {
           case Right(userData) => complete(userData)
           case Left(e) => complete(StatusCodes.Forbidden -> e)
+        }
+      }
+    }
+
+  protected def update: Route =
+    (put & parse[UserUpdateData]) { updateData =>
+      authDirectives.authenticate { email =>
+        onSuccess(userFacade.updateUser(email, updateData)) {
+          case Right(userData) => complete(userData)
+          case Left(PropertyError(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
         }
       }
     }
