@@ -9,6 +9,8 @@ import scala.concurrent.Future
 
 trait FacadeModule extends ServiceModule with ValidationModule with FutureInstances {
 
-  val userFacade: UserFacade[Future] = wire[UserFacadeImpl[Future]]
+  lazy val userFacade: UserFacade[Future] = wire[UserFacadeImpl[Future]]
+
+  lazy val profileFacade: ProfileFacade[Future] = wire[ProfileFacadeImpl[Future]]
 
 }

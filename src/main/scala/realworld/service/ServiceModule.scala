@@ -17,4 +17,6 @@ trait ServiceModule extends DaoModule with ActorModule with FutureInstances with
 
   lazy val userService: UserService[Future] = wire[UserServiceImpl[Future, DBIO]]
 
+  lazy val relationService: RelationService[Future] = wire[RelationServiceImpl[Future, DBIO]]
+
 }

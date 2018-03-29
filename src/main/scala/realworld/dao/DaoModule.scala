@@ -8,4 +8,6 @@ trait DaoModule extends DbModule with ActorModule {
 
   lazy val userDao: UserDao[DBIO] = wire[UserDaoImpl]
 
+  lazy val relationDao: RelationDao[DBIO] = wire[RelationDaoImpl]
+
 }

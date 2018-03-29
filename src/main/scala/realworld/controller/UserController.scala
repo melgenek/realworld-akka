@@ -3,7 +3,7 @@ package realworld.controller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import realworld.auth.AuthDirectives
-import realworld.data.{LoginData, RegistrationData, UserJsonProtocol, UserUpdateData}
+import realworld.data.{JsonProtocol, LoginData, RegistrationData, UserUpdateData}
 import realworld.exception.{ExceptionProtocol, PropertyError}
 import realworld.facade.UserFacade
 import realworld.parse.{ParseDirectives, Parsers}
@@ -16,7 +16,7 @@ class UserController(userFacade: UserFacade[Future],
   extends Controller
     with ParseDirectives
     with Parsers
-    with UserJsonProtocol
+    with JsonProtocol
     with ExceptionProtocol {
 
   override def route: Route = pathPrefix("users") {

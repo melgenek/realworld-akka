@@ -10,6 +10,8 @@ trait ControllerModule extends FacadeModule with AuthModule with Directives {
 
   lazy val userController: UserController = wire[UserController]
 
+  lazy val profileController: ProfileController = wire[ProfileController]
+
   lazy val controllers: Set[Controller] = wireSet[Controller]
 
   lazy val routes: Route = pathPrefix("api") {
