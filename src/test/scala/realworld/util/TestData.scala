@@ -12,6 +12,6 @@ object TestData {
   val Bio = "bio"
   val Image = "image"
 
-  val user = User(email = Email, username = UserName, password = Password)
+  val user = User(email = Email, username = UserName, password = PasswordHash)
 
 }

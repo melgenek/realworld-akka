@@ -19,19 +19,19 @@ class UsernameValidatorSpec
     with MockitoSugar {
 
   "validateUsername" should "return valid username" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("username")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("username")
 
     res should be("username".validNel)
   }
 
   it should "fail when username is too short" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("")
 
     res should be(ShortUsername(1).invalidNel)
   }
 
   it should "fail when username is too long" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("username" * 5)
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("username" * 5)
 
     res should be(LongUsername(20).invalidNel)
   }
@@ -39,7 +39,7 @@ class UsernameValidatorSpec
   it should "fail when username has already been already taken" in new Wiring {
     when(userService.findByUsername(any())).thenReturn(Some(user))
 
-    val res: ValidationResult[String] = validator.validate("username")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("username")
 
     res should be(AlreadyTakenUsername.invalidNel)
   }

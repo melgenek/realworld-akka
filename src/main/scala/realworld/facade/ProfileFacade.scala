@@ -5,7 +5,7 @@ import cats.data.EitherT
 import cats.implicits._
 import io.scalaland.chimney.dsl._
 import realworld.data.ProfileData
-import realworld.exception.NoProfileError
+import realworld.error.NoProfileError
 import realworld.model.User
 import realworld.service.{RelationService, UserService}
 

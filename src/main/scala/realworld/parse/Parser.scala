@@ -17,7 +17,7 @@ trait Parser[R] extends DefaultJsonProtocol {
       .getOrElse(EmptyProperty(fieldName).invalidNel)
 
   protected def optionField[T](value: JsValue, fieldName: String)(implicit reader: JsonReader[Option[T]]): Option[T] =
-    if (!value.asJsObject.fields.contains(fieldName)) None.asInstanceOf[Option[T]]
+    if (!value.asJsObject.fields.contains(fieldName)) Option.empty[T]
     else Try(reader.read(value.asJsObject.fields(fieldName)))
       .getOrElse(throw new RuntimeException(s"Could not read $fieldName"))
 

@@ -1,12 +1,13 @@
 package realworld.facade
 
 import cats.Monad
+import cats.data.EitherT
 import cats.implicits._
 import io.scalaland.chimney.dsl._
 import realworld.data.{LoginData, RegistrationData, UserData, UserUpdateData}
-import realworld.exception.{LoginPasswordAuthError, PropertyError, TokenError}
+import realworld.error.{LoginPasswordAuthError, PropertyError, TokenError}
 import realworld.model.User
-import realworld.service.{HashService, TokenService, UserService}
+import realworld.service.{TokenService, UserService}
 import realworld.validation.Validator
 
 import scala.language.higherKinds
@@ -25,30 +26,21 @@ trait UserFacade[F[_]] {
 
 class UserFacadeImpl[F[_] : Monad](userService: UserService[F],
                                    tokenService: TokenService,
-                                   hashService: HashService,
-                                   registrationDataValidator: Validator[RegistrationData, User, F],
-                                   userUpdateDataValidator: Validator[UserUpdateData, UserUpdateData, F]) extends UserFacade[F] {
+                                   registrationDataValidator: Validator[RegistrationData, F],
+                                   userUpdateDataValidator: Validator[UserUpdateData, F]) extends UserFacade[F] {
 
   def register(registrationData: RegistrationData): F[Either[PropertyError, UserData]] =
-    for {
-      userValidation <- registrationDataValidator.validate(registrationData)
-      registeredUser <- userValidation
-        .map { validUser =>
-          val userWithHashedPassword: User = validUser.copy(password = hashService.hashPassword(validUser.password))
-          userService.create(userWithHashedPassword).map(_.asRight[PropertyError])
-        }.valueOr(e => Monad[F].pure(PropertyError(e).asLeft[User]))
-    } yield registeredUser.map(convertToUserData)
+    (for {
+      validUserData <- EitherT(registrationDataValidator.validate(registrationData))
+      userToCreate = validUserData.into[User]
+        .withFieldConst(_.bio, Option.empty[String])
+        .withFieldConst(_.image, Option.empty[String])
+        .transform
+      registeredUser <- EitherT.right[PropertyError](userService.create(userToCreate))
+    } yield convertToUserData(registeredUser)).value
 
   override def login(loginData: LoginData): F[Either[LoginPasswordAuthError, UserData]] =
-    for {
-      userOpt <- userService.findByEmail(loginData.email)
-    } yield {
-      val r: Either[LoginPasswordAuthError, User] = userOpt.map { user =>
-        if (hashService.isPasswordCorrect(loginData.password, user.password)) user.asRight
-        else LoginPasswordAuthError().asLeft
-      }.getOrElse(LoginPasswordAuthError().asLeft)
-      r.map(convertToUserData)
-    }
+    userService.login(loginData.email, loginData.password).map(_.map(convertToUserData))
 
   override def getByEmail(email: String): F[Either[TokenError, UserData]] =
     for {
@@ -60,17 +52,16 @@ class UserFacadeImpl[F[_] : Monad](userService: UserService[F],
   override def updateUser(email: String, userUpdateData: UserUpdateData): F[Either[PropertyError, UserData]] =
     for {
       user <- userService.getByEmail(email)
-      validUserUpdateData <- userUpdateDataValidator.validate(userUpdateData)
-      updatedUser <- validUserUpdateData.map { validData =>
-        val userToUpdate: User = user.copy(
+      updatedUser <- EitherT(userUpdateDataValidator.validate(userUpdateData)).semiflatMap { validData =>
+        val userToUpdate: User = User(
           email = validData.email.getOrElse(user.email),
           username = validData.username.getOrElse(user.username),
-          password = validData.password.map(hashService.hashPassword).getOrElse(user.password),
+          password = validData.password.getOrElse(user.password),
           bio = validData.bio.orElse(user.bio),
           image = validData.image.orElse(user.image)
         )
-        userService.update(user.email, userToUpdate).map(_.asRight[PropertyError])
-      }.valueOr(e => Monad[F].pure(PropertyError(e).asLeft[User]))
+        userService.update(user.email, userToUpdate)
+      }.value
     } yield updatedUser.map(convertToUserData)
 
   private def convertToUserData(user: User): UserData = user.into[UserData]

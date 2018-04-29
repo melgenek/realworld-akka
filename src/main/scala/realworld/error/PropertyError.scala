@@ -1,4 +1,4 @@
-package realworld.exception
+package realworld.error
 
 import cats.data.NonEmptyList
 import realworld.validation.entity.PropertyValidation

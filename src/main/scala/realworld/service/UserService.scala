@@ -3,11 +3,14 @@ package realworld.service
 import cats._
 import cats.implicits._
 import realworld.dao.UserDao
+import realworld.error.LoginPasswordAuthError
 import realworld.model.User
 
 import scala.language.higherKinds
 
 trait UserService[F[_]] {
+
+  def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]]
 
   def create(user: User): F[User]
 
@@ -22,12 +25,19 @@ trait UserService[F[_]] {
 }
 
 class UserServiceImpl[F[_] : Monad, DB[_] : Monad](userDao: UserDao[DB],
+                                                   hashService: HashService,
                                                    db: DB ~> F) extends UserService[F] {
 
-  override def create(user: User): F[User] =
-    db {
-      userDao.create(user).map(_.record)
-    }
+  override def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]] =
+    findByEmail(email).map(_.map { user =>
+      if (hashService.isPasswordCorrect(password, user.password)) user.asRight
+      else LoginPasswordAuthError().asLeft
+    }.getOrElse(LoginPasswordAuthError().asLeft))
+
+  override def create(user: User): F[User] = {
+    val userWithHashedPassword: User = user.copy(password = hashService.hashPassword(user.password))
+    db(userDao.create(userWithHashedPassword).map(_.record))
+  }
 
   override def findByEmail(email: String): F[Option[User]] =
     db {
@@ -48,7 +58,9 @@ class UserServiceImpl[F[_] : Monad, DB[_] : Monad](userDao: UserDao[DB],
     db {
       for {
         oldUser <- userDao.getByEmail(oldEmail)
-        newUser = oldUser.copy(record = user)
+        userWithHashedPassword = if (oldUser.record.password == user.password) user
+        else user.copy(password = hashService.hashPassword(user.password))
+        newUser = oldUser.copy(record = userWithHashedPassword)
         _ <- userDao.update(newUser)
       } yield newUser.record
     }

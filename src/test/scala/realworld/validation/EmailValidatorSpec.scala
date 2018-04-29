@@ -19,13 +19,13 @@ class EmailValidatorSpec
     with MockitoSugar {
 
   "validateEmail" should "return valid email" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("valid@email.com")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("valid@email.com")
 
     res should be("valid@email.com".validNel)
   }
 
   it should "fail when email is invalid" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("NOT_AN_EMAIL")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("NOT_AN_EMAIL")
 
     res should be(InvalidEmail.invalidNel)
   }
@@ -33,7 +33,7 @@ class EmailValidatorSpec
   it should "fail when email has already been already taken" in new Wiring {
     when(userService.findByEmail(any())).thenReturn(Some(user))
 
-    val res: ValidationResult[String] = validator.validate("valid@email.com")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("valid@email.com")
 
     res should be(AlreadyTakenEmail.invalidNel)
   }

@@ -5,15 +5,15 @@ import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
 import org.apache.commons.validator.routines
 import realworld.service.UserService
-import realworld.validation.Validator
+import realworld.validation.AbstractValidator
 import realworld.validation.entity.PropertyValidation.ValidationResult
 import realworld.validation.entity.{AlreadyTakenEmail, InvalidEmail}
 
 import scala.language.higherKinds
 
-class EmailValidator[F[_] : Monad](userService: UserService[F]) extends Validator[String, String, F] {
+class EmailValidator[F[_] : Monad](userService: UserService[F]) extends AbstractValidator[String, F] {
 
-  override def validate(email: String): F[ValidationResult[String]] =
+  override def validateAndCollectErrors(email: String): F[ValidationResult[String]] =
     validateEmailFormat(email) match {
       case Valid(validEmail) =>
         userService.findByEmail(validEmail).map { userOpt =>

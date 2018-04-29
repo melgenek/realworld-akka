@@ -1,3 +1,3 @@
-package realworld.exception
+package realworld.error
 
 case class NoProfileError()

@@ -4,7 +4,6 @@ import cats.instances.FutureInstances
 import com.softwaremill.macwire._
 import realworld.config.ActorModule
 import realworld.data.{RegistrationData, UserUpdateData}
-import realworld.model.User
 import realworld.service.ServiceModule
 import realworld.util.db.DBIOInstances
 import realworld.validation.impl._
@@ -19,8 +18,8 @@ trait ValidationModule extends ServiceModule with ActorModule with FutureInstanc
 
   lazy val passwordValidator: PasswordValidator = wire[PasswordValidator]
 
-  lazy val registrationDataValidator: Validator[RegistrationData, User, Future] = wire[RegistrationDataValidator[Future]]
+  lazy val registrationDataValidator: Validator[RegistrationData, Future] = wire[RegistrationDataValidator[Future]]
 
-  lazy val userUpdateDataValidator: Validator[UserUpdateData, UserUpdateData, Future] = wire[UserUpdateDataValidator[Future]]
+  lazy val userUpdateDataValidator: Validator[UserUpdateData, Future] = wire[UserUpdateDataValidator[Future]]
 
 }

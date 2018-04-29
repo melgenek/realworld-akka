@@ -14,19 +14,19 @@ class PasswordValidatorSpec
     with MockitoSugar {
 
   "validatePasswordFormat" should "return valid password" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("qwerty123")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("qwerty123")
 
     res should be("qwerty123".validNel)
   }
 
   it should "fail when password is too short" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("q")
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("q")
 
     res should be(ShortPassword(8).invalidNel)
   }
 
   it should "fail when password is too long" in new Wiring {
-    val res: ValidationResult[String] = validator.validate("qwerty123" * 10)
+    val res: ValidationResult[String] = validator.validateAndCollectErrors("qwerty123" * 10)
 
     res should be(LongPassword(72).invalidNel)
   }

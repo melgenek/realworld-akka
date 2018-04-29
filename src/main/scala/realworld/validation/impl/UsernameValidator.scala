@@ -4,15 +4,15 @@ import cats.Monad
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
 import realworld.service.UserService
-import realworld.validation.Validator
+import realworld.validation.AbstractValidator
 import realworld.validation.entity.PropertyValidation.ValidationResult
 import realworld.validation.entity.{AlreadyTakenUsername, LongUsername, ShortUsername}
 
 import scala.language.higherKinds
 
-class UsernameValidator[F[_] : Monad](userService: UserService[F]) extends Validator[String, String, F] {
+class UsernameValidator[F[_] : Monad](userService: UserService[F]) extends AbstractValidator[String, F] {
 
-  override def validate(username: String): F[ValidationResult[String]] =
+  override def validateAndCollectErrors(username: String): F[ValidationResult[String]] =
     validateUsernameFormat(username) match {
       case Valid(validUsername) =>
         userService.findByUsername(validUsername).map(userOpt =>

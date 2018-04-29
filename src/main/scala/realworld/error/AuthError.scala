@@ -1,4 +1,4 @@
-package realworld.exception
+package realworld.error
 
 abstract class AuthError(val key: String, val message: String)
 
