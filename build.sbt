@@ -1,6 +1,6 @@
 name := "realworld-akka"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.6"
 
 val versions = new {
   val akkaHttp = "10.0.10"
