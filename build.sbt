@@ -5,18 +5,23 @@ scalaVersion := "2.12.6"
 val versions = new {
   val akkaHttp = "10.0.10"
   val slick = "3.2.1"
+  val circe = "0.11.1"
 }
 
 libraryDependencies ++= dependencies ++ testDependencies
 
+
 val dependencies = Seq(
   "com.typesafe.akka" %% "akka-http" % versions.akkaHttp,
-  "com.typesafe.akka" %% "akka-http-spray-json" % versions.akkaHttp,
+
+  "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
+  "io.circe" %% "circe-core" % versions.circe,
+  "io.circe" %% "circe-generic" % versions.circe,
+  "io.circe" %% "circe-parser" % versions.circe,
 
   "com.typesafe.slick" %% "slick" % versions.slick,
   "com.typesafe.slick" %% "slick-hikaricp" % versions.slick,
   "com.h2database" % "h2" % "1.4.196",
-  "org.flywaydb" % "flyway-core" % "5.0.6",
 
   "org.mindrot" % "jbcrypt" % "0.4",
   "io.jsonwebtoken" % "jjwt" % "0.9.0",

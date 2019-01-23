@@ -9,6 +9,8 @@ trait Dependencies extends ControllerModule
 
 class ReadWorld extends Dependencies with StrictLogging {
 
+  import realworld.error.ErrorRejectionHandler.handler
+
   def run(): Unit = {
     Http().bindAndHandle(routes, httpInterface, httpPort).fast
       .map(binding => logger.info(s"RealWorld server started on ${binding.localAddress}"))

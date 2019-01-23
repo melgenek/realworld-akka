@@ -3,20 +3,19 @@ package realworld.controller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import realworld.auth.AuthDirectives
-import realworld.data.{JsonProtocol, LoginData, RegistrationData, UserUpdateData}
-import realworld.error.{ErrorProtocol, PropertyError}
+import realworld.data.{DataJsonProtocol, LoginData, RegistrationData, UserUpdateData}
+import realworld.error.{AuthErrorProtocol, PropertyError}
 import realworld.facade.UserFacade
-import realworld.parse.{ParseDirectives, Parsers}
 import realworld.util.akka.Controller
+import realworld.validation.entity.ValidationProtocol
 
 import scala.concurrent.Future
 
 class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirectives)
   extends Controller
-    with ParseDirectives
-    with Parsers
-    with JsonProtocol
-    with ErrorProtocol {
+    with DataJsonProtocol
+    with AuthErrorProtocol
+    with ValidationProtocol {
 
   override def route: Route = pathPrefix("users") {
     pathEndOrSingleSlash {
@@ -29,7 +28,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
   }
 
   protected def register: Route = {
-    (post & parse[RegistrationData]) { registrationData =>
+    (post & entity(as[RegistrationData])) { registrationData =>
       onSuccess(userFacade.register(registrationData)) {
         case Right(userData) => complete(userData)
         case Left(PropertyError(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
@@ -38,7 +37,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
   }
 
   protected def login: Route = {
-    (post & parse[LoginData]) { loginData =>
+    (post & entity(as[LoginData])) { loginData =>
       onSuccess(userFacade.login(loginData)) {
         case Right(userData) => complete(userData)
         case Left(e) => complete(StatusCodes.UnprocessableEntity -> e)
@@ -57,7 +56,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
     }
 
   protected def update: Route =
-    (put & parse[UserUpdateData]) { updateData =>
+    (put & entity(as[UserUpdateData])) { updateData =>
       authDirectives.authenticate { email =>
         onSuccess(userFacade.updateUser(email, updateData)) {
           case Right(userData) => complete(userData)

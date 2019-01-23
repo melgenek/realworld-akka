@@ -1,9 +1,11 @@
 package realworld.controller
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.softwaremill.macwire._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe._
+import io.circe.parser._
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -12,7 +14,6 @@ import realworld.auth.{AuthDirectives, EmailAuthenticator}
 import realworld.data.UserData
 import realworld.facade.UserFacade
 import realworld.util.{SpecImplicits, TestData}
-import spray.json._
 
 import scala.concurrent.Future
 
@@ -21,50 +22,53 @@ class UserControllerSpec
     with Matchers
     with ScalatestRouteTest
     with MockitoSugar
-    with DefaultJsonProtocol
-    with SprayJsonSupport
+    with FailFastCirceSupport
     with SpecImplicits {
 
   import TestData._
 
   "register" should "return created user" in new Wiring {
-    val registrationData: JsValue =
-      s"""{
-         |  "user":{
-         |    "username": "$UserName",
-         |    "email": "$Email",
-         |    "password": "$Password"
-         |  }
-         |}""".stripMargin.parseJson
+    val registrationData: Json =
+      parse(
+        s"""{
+           |  "user":{
+           |    "username": "$UserName",
+           |    "email": "$Email",
+           |    "password": "$Password"
+           |  }
+           |}""".stripMargin).getOrElse(Json.Null)
 
     Post("/users", registrationData) ~> controller.route ~> check {
       status shouldEqual StatusCodes.OK
-      val user: Map[String, JsValue] = responseAs[JsObject].fields("user").asJsObject.fields
-      user("email") should equal(JsString(Email))
-      user("token") should equal(JsString(Token))
-      user("username") should equal(JsString(UserName))
-      user("bio") should equal(JsNull)
-      user("image") should equal(JsNull)
+      val responseJson = responseAs[JsonObject]
+      val user: Map[String, Json] = responseJson("user").flatMap(_.asObject).get.toMap
+      user("email") should equal(Json.fromString(Email))
+      user("token") should equal(Json.fromString(Token))
+      user("username") should equal(Json.fromString(UserName))
+      user("bio") should equal(Json.Null)
+      user("image") should equal(Json.Null)
     }
   }
 
   "login" should "return authenticated user" in new Wiring {
-    val loginData: JsValue =
-      s"""{
-         |  "user":{
-         |    "email": "$Email",
-         |    "password": "$Password"
-         |  }
-         |}""".stripMargin.parseJson
+    val loginData: Json =
+      parse(
+        s"""{
+           |  "user":{
+           |    "email": "$Email",
+           |    "password": "$Password"
+           |  }
+           |}""".stripMargin).getOrElse(Json.Null)
 
     Post("/users/login", loginData) ~> controller.route ~> check {
       status shouldEqual StatusCodes.OK
-      val user: Map[String, JsValue] = responseAs[JsObject].fields("user").asJsObject.fields
-      user("email") should equal(JsString(Email))
-      user("token") should equal(JsString(Token))
-      user("username") should equal(JsString(UserName))
-      user("bio") should equal(JsNull)
-      user("image") should equal(JsNull)
+      val responseJson = responseAs[JsonObject]
+      val user: Map[String, Json] = responseJson("user").flatMap(_.asObject).get.toMap
+      user("email") should equal(Json.fromString(Email))
+      user("token") should equal(Json.fromString(Token))
+      user("username") should equal(Json.fromString(UserName))
+      user("bio") should equal(Json.Null)
+      user("image") should equal(Json.Null)
     }
   }
 
