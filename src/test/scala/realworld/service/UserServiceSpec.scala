@@ -19,7 +19,7 @@ class UserServiceSpec
   import TestData._
 
   "login" should "return user when password is correct" in new Wiring {
-    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password)
+    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password).value
 
     result should equal(Right(user))
   }
@@ -27,7 +27,7 @@ class UserServiceSpec
   it should "fail when password is not correct" in new Wiring {
     when(hashService.isPasswordCorrect(Password, PasswordHash)).thenReturn(false)
 
-    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password)
+    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password).value
 
     result should be(Left(LoginPasswordAuthError()))
   }
@@ -35,7 +35,7 @@ class UserServiceSpec
   it should "fail when no user is found" in new Wiring {
     when(userDao.findByEmail(any())).thenReturn(None)
 
-    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password)
+    val result: Either[LoginPasswordAuthError, User] = service.login(Email, Password).value
 
     result should be(Left(LoginPasswordAuthError()))
   }

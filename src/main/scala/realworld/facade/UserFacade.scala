@@ -14,13 +14,13 @@ import scala.language.higherKinds
 
 trait UserFacade[F[_]] {
 
-  def register(registrationData: RegistrationData): F[Either[PropertyError, UserData]]
+  def register(registrationData: RegistrationData): EitherT[F, PropertyError, UserData]
 
-  def login(loginData: LoginData): F[Either[LoginPasswordAuthError, UserData]]
+  def login(loginData: LoginData): EitherT[F, LoginPasswordAuthError, UserData]
 
-  def getByEmail(email: String): F[Either[TokenError, UserData]]
+  def getByEmail(email: String): EitherT[F, TokenError, UserData]
 
-  def updateUser(email: String, userUpdateData: UserUpdateData): F[Either[PropertyError, UserData]]
+  def updateUser(email: String, userUpdateData: UserUpdateData): EitherT[F, PropertyError, UserData]
 
 }
 
@@ -29,40 +29,35 @@ class UserFacadeImpl[F[_] : Monad](userService: UserService[F],
                                    registrationDataValidator: Validator[RegistrationData, F],
                                    userUpdateDataValidator: Validator[UserUpdateData, F]) extends UserFacade[F] {
 
-  def register(registrationData: RegistrationData): F[Either[PropertyError, UserData]] =
-    (for {
-      validUserData <- EitherT(registrationDataValidator.validate(registrationData))
+  def register(registrationData: RegistrationData): EitherT[F, PropertyError, UserData] =
+    for {
+      validUserData <- registrationDataValidator.validate(registrationData)
       userToCreate = validUserData.into[User]
         .withFieldConst(_.bio, Option.empty[String])
         .withFieldConst(_.image, Option.empty[String])
         .transform
-      registeredUser <- EitherT.right[PropertyError](userService.create(userToCreate))
-    } yield convertToUserData(registeredUser)).value
+      registeredUser <- EitherT.liftF(userService.create(userToCreate))
+    } yield convertToUserData(registeredUser)
 
-  override def login(loginData: LoginData): F[Either[LoginPasswordAuthError, UserData]] =
-    userService.login(loginData.email, loginData.password).map(_.map(convertToUserData))
+  override def login(loginData: LoginData): EitherT[F, LoginPasswordAuthError, UserData] =
+    userService.login(loginData.email, loginData.password).map(convertToUserData)
 
-  override def getByEmail(email: String): F[Either[TokenError, UserData]] =
+  override def getByEmail(email: String): EitherT[F, TokenError, UserData] =
+    EitherT.fromOptionF(userService.findByEmail(email), TokenError()).map(convertToUserData)
+
+  def updateUser(email: String, userUpdateData: UserUpdateData): EitherT[F, PropertyError, UserData] =
     for {
-      userOpt <- userService.findByEmail(email)
-    } yield userOpt.map(_.asRight)
-      .getOrElse(TokenError().asLeft)
-      .map(convertToUserData)
-
-  override def updateUser(email: String, userUpdateData: UserUpdateData): F[Either[PropertyError, UserData]] =
-    for {
-      user <- userService.getByEmail(email)
-      updatedUser <- EitherT(userUpdateDataValidator.validate(userUpdateData)).semiflatMap { validData =>
-        val userToUpdate: User = User(
-          email = validData.email.getOrElse(user.email),
-          username = validData.username.getOrElse(user.username),
-          password = validData.password.getOrElse(user.password),
-          bio = validData.bio.orElse(user.bio),
-          image = validData.image.orElse(user.image)
-        )
-        userService.update(user.email, userToUpdate)
-      }.value
-    } yield updatedUser.map(convertToUserData)
+      user <- EitherT.liftF(userService.getByEmail(email))
+      validData <- userUpdateDataValidator.validate(userUpdateData)
+      userToUpdate = User(
+        email = validData.email.getOrElse(user.email),
+        username = validData.username.getOrElse(user.username),
+        password = validData.password.getOrElse(user.password),
+        bio = validData.bio.orElse(user.bio),
+        image = validData.image.orElse(user.image)
+      )
+      updatedUser <- EitherT.liftF(userService.update(user.email, userToUpdate))
+    } yield convertToUserData(updatedUser)
 
   private def convertToUserData(user: User): UserData = user.into[UserData]
     .withFieldComputed(_.token, u => tokenService.createTokenByEmail(u.email))

@@ -1,8 +1,7 @@
 package realworld.facade
 
 import cats.Monad
-import cats.data.EitherT
-import cats.implicits._
+import cats.data.{EitherT, OptionT}
 import io.scalaland.chimney.dsl._
 import realworld.data.ProfileData
 import realworld.error.NoProfileError
@@ -13,34 +12,24 @@ import scala.language.higherKinds
 
 trait ProfileFacade[F[_]] {
 
-  def get(profileUsername: String, currentUserEmail: String): F[Either[NoProfileError, ProfileData]]
+  def get(profileUsername: String, currentUserEmail: String): EitherT[F, NoProfileError, ProfileData]
 
 }
 
-class ProfileFacadeImpl[F[_] : Monad](userService: UserService[F],
-                                      relationService: RelationService[F]) extends ProfileFacade[F] {
+class ProfileFacadeImpl[F[_] : Monad](userService: UserService[F], relationService: RelationService[F]) extends ProfileFacade[F] {
 
-  override def get(profileUsername: String, currentUserEmail: String): F[Either[NoProfileError, ProfileData]] =
+  override def get(profileUsername: String, currentUserEmail: String): EitherT[F, NoProfileError, ProfileData] =
     for {
-      profileUserOpt <- userService.findByUsername(profileUsername)
-      profileUser <- EitherT.fromOption[F](profileUserOpt, NoProfileError()).flatMapF { profileUser =>
-        following(profileUser, currentUserEmail).map { following =>
-          (profileUser, following).asRight[NoProfileError]
-        }
-      }.value
-    } yield profileUser.map { case (user, following) =>
-      user.into[ProfileData]
-        .withFieldConst(_.following, following)
-        .transform
-    }
+      profileUser <- EitherT.fromOptionF(userService.findByUsername(profileUsername), NoProfileError())
+      following <- EitherT.liftF(following(profileUser, currentUserEmail))
+    } yield profileUser.into[ProfileData]
+      .withFieldConst(_.following, following)
+      .transform
 
   private def following(profileUser: User, currentUserEmail: String): F[Boolean] =
-    for {
-      authenticatedUserOpt <- userService.findByEmail(currentUserEmail)
-      following <- authenticatedUserOpt.map { authenticatedUser =>
-        relationService.follows(authenticatedUser.email, profileUser.email)
-      }.getOrElse(Monad[F].pure(false))
-    } yield following
+    OptionT(userService.findByEmail(currentUserEmail))
+      .semiflatMap { authenticatedUser => relationService.follows(authenticatedUser.email, profileUser.email) }
+      .getOrElse(false)
 
 }
 

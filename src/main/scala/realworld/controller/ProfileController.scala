@@ -25,7 +25,7 @@ class ProfileController(profileFacade: ProfileFacade[Future], authDirectives: Au
 
   protected def getProfile(profileUsername: String, email: String): Route =
     get {
-      onSuccess(profileFacade.get(profileUsername, email)) {
+      onSuccess(profileFacade.get(profileUsername, email).value) {
         case Right(profile) => complete(profile)
         case Left(e) => complete(StatusCodes.NotFound)
       }

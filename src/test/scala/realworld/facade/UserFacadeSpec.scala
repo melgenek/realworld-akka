@@ -10,7 +10,7 @@ import realworld.data.{RegistrationData, UserData, UserUpdateData}
 import realworld.error.PropertyError
 import realworld.model.User
 import realworld.service.{TokenService, UserService}
-import realworld.util.{IdInstances, TestData}
+import realworld.util.{IdInstances, SpecImplicits, TestData}
 import realworld.validation.Validator
 import realworld.validation.entity.InvalidEmail
 
@@ -24,7 +24,7 @@ class UserFacadeSpec
   "registerUser" should "generate token for valid user" in new Wiring {
     when(userService.create(User(Email, UserName, Password))).thenReturn(user)
 
-    val result: Either[PropertyError, UserData] = facade.register(registrationData)
+    val result: Either[PropertyError, UserData] = facade.register(registrationData).value
 
     result should equal(Right(UserData(
       Email,
@@ -34,18 +34,18 @@ class UserFacadeSpec
   }
 
   it should "fail when registration data is invalid" in new Wiring {
-    when(registrationDataValidator.validate(registrationData)).thenReturn(Left(PropertyError(NonEmptyList.of(InvalidEmail))))
+    when(registrationDataValidator.validate(registrationData)).thenLeft(PropertyError(NonEmptyList.of(InvalidEmail)))
 
-    val result: Either[PropertyError, UserData] = facade.register(registrationData)
+    val result: Either[PropertyError, UserData] = facade.register(registrationData).value
 
     result should equal(Left(PropertyError(NonEmptyList.of(InvalidEmail))))
   }
 
-  private trait Wiring extends IdInstances {
+  private trait Wiring extends IdInstances with SpecImplicits {
     val registrationData = RegistrationData(Email, UserName, Password)
 
     val registrationDataValidator: Validator[RegistrationData, Id] = mock[Validator[RegistrationData, Id]]
-    when(registrationDataValidator.validate(registrationData)).thenReturn(Right(registrationData))
+    when(registrationDataValidator.validate(registrationData)).thenRight(registrationData)
 
     val userUpdateDataValidator: Validator[UserUpdateData, Id] = mock[Validator[UserUpdateData, Id]]
 

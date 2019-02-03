@@ -2,6 +2,7 @@ package realworld.controller
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import cats.instances.future._
 import com.softwaremill.macwire._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe._
@@ -76,8 +77,8 @@ class UserControllerSpec
     val userData = UserData(Email, UserName, Token, None, None)
 
     val userFacade: UserFacade[Future] = mock[UserFacade[Future]]
-    when(userFacade.register(any())).thenReturnAsync(Right(userData))
-    when(userFacade.login(any())).thenReturnAsync(Right(userData))
+    when(userFacade.register(any())).thenRight(userData)
+    when(userFacade.login(any())).thenRight(userData)
 
     val emailAuthenticator: EmailAuthenticator = mock[EmailAuthenticator]
     val authDirectives: AuthDirectives = new AuthDirectives(emailAuthenticator)

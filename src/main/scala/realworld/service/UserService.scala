@@ -1,6 +1,7 @@
 package realworld.service
 
 import cats._
+import cats.data.EitherT
 import cats.implicits._
 import realworld.dao.UserDao
 import realworld.error.LoginPasswordAuthError
@@ -10,7 +11,7 @@ import scala.language.higherKinds
 
 trait UserService[F[_]] {
 
-  def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]]
+  def login(email: String, password: String): EitherT[F, LoginPasswordAuthError, User]
 
   def create(user: User): F[User]
 
@@ -28,11 +29,11 @@ class UserServiceImpl[F[_] : Monad, DB[_] : Monad](userDao: UserDao[DB],
                                                    hashService: HashService,
                                                    db: DB ~> F) extends UserService[F] {
 
-  override def login(email: String, password: String): F[Either[LoginPasswordAuthError, User]] =
-    findByEmail(email).map(_.map { user =>
+  override def login(email: String, password: String): EitherT[F, LoginPasswordAuthError, User] =
+    EitherT.fromOptionF(findByEmail(email), LoginPasswordAuthError()).subflatMap { user =>
       if (hashService.isPasswordCorrect(password, user.password)) user.asRight
       else LoginPasswordAuthError().asLeft
-    }.getOrElse(LoginPasswordAuthError().asLeft))
+    }
 
   override def create(user: User): F[User] = {
     val userWithHashedPassword: User = user.copy(password = hashService.hashPassword(user.password))

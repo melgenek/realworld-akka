@@ -29,7 +29,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
 
   protected def register: Route = {
     (post & entity(as[RegistrationData])) { registrationData =>
-      onSuccess(userFacade.register(registrationData)) {
+      onSuccess(userFacade.register(registrationData).value) {
         case Right(userData) => complete(userData)
         case Left(PropertyError(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
       }
@@ -38,7 +38,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
 
   protected def login: Route = {
     (post & entity(as[LoginData])) { loginData =>
-      onSuccess(userFacade.login(loginData)) {
+      onSuccess(userFacade.login(loginData).value) {
         case Right(userData) => complete(userData)
         case Left(e) => complete(StatusCodes.UnprocessableEntity -> e)
       }
@@ -48,7 +48,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
   protected def info: Route =
     get {
       authDirectives.authenticate { email =>
-        onSuccess(userFacade.getByEmail(email)) {
+        onSuccess(userFacade.getByEmail(email).value) {
           case Right(userData) => complete(userData)
           case Left(e) => complete(StatusCodes.Forbidden -> e)
         }
@@ -58,7 +58,7 @@ class UserController(userFacade: UserFacade[Future], authDirectives: AuthDirecti
   protected def update: Route =
     (put & entity(as[UserUpdateData])) { updateData =>
       authDirectives.authenticate { email =>
-        onSuccess(userFacade.updateUser(email, updateData)) {
+        onSuccess(userFacade.updateUser(email, updateData).value) {
           case Right(userData) => complete(userData)
           case Left(PropertyError(errors)) => complete(StatusCodes.UnprocessableEntity -> errors)
         }
