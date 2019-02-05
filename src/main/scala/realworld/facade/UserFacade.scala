@@ -2,7 +2,6 @@ package realworld.facade
 
 import cats.Monad
 import cats.data.EitherT
-import cats.implicits._
 import io.scalaland.chimney.dsl._
 import realworld.data.{LoginData, RegistrationData, UserData, UserUpdateData}
 import realworld.error.{LoginPasswordAuthError, PropertyError, TokenError}

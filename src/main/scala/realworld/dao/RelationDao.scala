@@ -11,6 +11,10 @@ trait RelationDao[F[_]] {
 
   def follows(followerEmail: String, followeeEmail: String): F[Boolean]
 
+  def follow(followerId: Long, followeeId: Long): F[Unit]
+
+  def unfollow(followerId: Long, followeeId: Long): F[Unit]
+
 }
 
 
@@ -23,11 +27,20 @@ class RelationDaoImpl(val profile: JdbcProfile)(implicit ec: ExecutionContext) e
       relation <- relations
       follower <- relation.follower
       followee <- relation.followee
-      if follower.email === followerEmail
-      if followee.email === followeeEmail
+      if follower.email === followerEmail.bind
+      if followee.email === followeeEmail.bind
     } yield relation)
       .result
       .headOption
       .map(_.isDefined)
+
+  override def follow(followerId: Long, followeeId: Long): DBIO[Unit] =
+    (relations += (followerId, followeeId)).map(_ => ())
+
+  override def unfollow(followerId: Long, followeeId: Long): DBIO[Unit] =
+    relations
+      .filter(r => r.followerId === followerId.bind && r.followeeId === followeeId.bind)
+      .delete
+      .map(_ => ())
 
 }
